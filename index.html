@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fibonacci Sector & Top 10 Analyzer</title>
+    <title>AI Smart Share Analyzer (Tech + Funda)</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -12,202 +12,108 @@
             margin: 0;
             padding: 20px;
         }
-        .container {
-            max-width: 1400px;
-            margin: auto;
-        }
-        h1 {
-            text-align: center;
-            color: #38bdf8;
-            margin-bottom: 5px;
-        }
-        p.subtitle {
-            text-align: center;
-            color: #94a3b8;
-            margin-bottom: 25px;
-        }
-        .mode-container {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .tab-btn {
-            background-color: #334155;
-            color: #94a3b8;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .tab-btn.active {
-            background-color: #0284c7;
-            color: white;
-        }
+        .container { max-width: 1450px; margin: auto; }
+        h1 { text-align: center; color: #38bdf8; margin-bottom: 5px; }
+        p.subtitle { text-align: center; color: #94a3b8; margin-bottom: 30px; font-size: 15px; }
+        
         .input-card {
-            background: #1e293b;
-            padding: 25px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            background: #1e293b; padding: 25px; border-radius: 10px;
+            text-align: center; margin-bottom: 25px; border: 1px solid #334155;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
-        input[type="text"], textarea {
-            width: 90%;
-            max-width: 700px;
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid #334155;
-            background-color: #0f172a;
-            color: #fff;
-            margin-bottom: 15px;
-            font-size: 14px;
+        input[type="text"] {
+            width: 90%; max-width: 900px; padding: 12px; border-radius: 6px;
+            border: 1px solid #334155; background-color: #0f172a; color: #fff;
+            margin-bottom: 15px; font-size: 14px;
         }
-        textarea { height: 120px; font-family: monospace; }
         button.action-btn {
-            background-color: #0284c7;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: 0.3s;
+            background-color: #0284c7; color: white; border: none; padding: 12px 35px;
+            font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.3s;
         }
         button.action-btn:hover { background-color: #0369a1; }
         .loading { display: none; text-align: center; color: #fbbf24; font-weight: bold; margin-top: 15px; }
         
-        .sector-panel {
-            display: flex;
-            justify-content: space-between;
-            background-color: #1e293b;
-            padding: 15px 25px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #334155;
+        /* Top 5 AI Picks Section */
+        .top-picks-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px; margin-bottom: 40px; }
+        .pick-card {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            padding: 20px; border-radius: 10px; border: 1px solid #38bdf8;
+            position: relative; box-shadow: 0 4px 10px rgba(56, 189, 248, 0.15);
         }
-        .sector-box h3 { margin: 0 0 10px 0; font-size: 16px; color: #94a3b8; }
-        .sector-name { font-size: 20px; font-weight: bold; }
-
-        .table-responsive { overflow-x: auto; }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            background-color: #1e293b;
-            border-radius: 8px;
-            overflow: hidden;
-            font-size: 14px;
+        .pick-card .rank {
+            position: absolute; top: -12px; right: -12px; background: #38bdf8; color: #0f172a;
+            font-weight: 900; padding: 8px 15px; border-radius: 20px; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
-        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #334155; }
-        th { background-color: #334155; color: #38bdf8; }
+        .ai-score { font-size: 24px; font-weight: bold; color: #4ade80; margin: 10px 0; }
+        
+        .table-responsive { overflow-x: auto; border-radius: 10px; border: 1px solid #334155; }
+        table { width: 100%; border-collapse: collapse; background-color: #1e293b; font-size: 14px; }
+        th, td { padding: 14px 12px; text-align: left; border-bottom: 1px solid #334155; }
+        th { background-color: #0f172a; color: #38bdf8; font-weight: bold; position: sticky; top: 0; }
         tr:hover { background-color: #334155; }
-        .positive { color: #4ade80; font-weight: bold; }
-        .negative { color: #f87171; font-weight: bold; }
-        .sl-text { color: #f87171; font-weight: bold; }
-        .res-text { color: #fbbf24; font-weight: bold; }
-        .sup-text { color: #38bdf8; font-weight: bold; }
-        .top-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px; }
-        .card { background: #1e293b; padding: 20px; border-radius: 8px; border-left: 5px solid #38bdf8; position: relative;}
-        .card .rank-badge { position: absolute; top: -10px; right: -10px; background: #38bdf8; color: #0f172a; font-weight: bold; padding: 5px 12px; border-radius: 20px; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);}
+        
+        .val-good { color: #4ade80; font-weight: bold; } /* Undervalued / Good */
+        .val-bad { color: #f87171; font-weight: bold; } /* Overvalued / Bad */
+        .val-neutral { color: #fbbf24; font-weight: bold; }
+        
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-right: 5px; }
+        .bg-tech { background-color: #312e81; color: #a5b4fc; }
+        .bg-fund { background-color: #14532d; color: #86efac; }
+        
         .disclaimer { margin-top: 40px; padding: 15px; background-color: #451a03; border: 1px solid #78350f; color: #fde68a; border-radius: 8px; text-align: center; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Sector-Wise Top 10 Stocks Analyzer</h1>
-    <p class="subtitle">Live Sector Rotation & Fibonacci Trading Levels (Auto-Refreshing)</p>
+    <h1>AI Smart Share Analyzer & Report</h1>
+    <p class="subtitle">Comprehensive Technical + Fundamental Analysis with AI Scoring System</p>
 
-    <div class="mode-container">
-        <button class="tab-btn active" id="btn-tab-url" onclick="switchMode('url')">Automatic / Link Fetch</button>
-        <button class="tab-btn" id="btn-tab-paste" onclick="switchMode('paste')">Direct Copy-Paste</button>
-    </div>
-
-    <!-- Mode 1: URL Fetch -->
-    <div class="input-card" id="mode-url">
-        <input type="text" id="sheetUrl" value="https://docs.google.com/spreadsheets/d/e/2PACX-1vTYfsq465bB2pSHGi3GvZihmZFgHcmpJk08VHl25QdPfaoLkiV2IxrU99cMVQ0flyYALgAgoigSzyGw/pub?gid=0&single=true&output=csv">
+    <div class="input-card">
+        <!-- പുതിയ CSV ലിങ്ക് ഇവിടെ ചേർത്തിട്ടുണ്ട് -->
+        <input type="text" id="sheetUrl" value="https://docs.google.com/spreadsheets/d/e/2PACX-1vTYfsq465bB2pSHGi3GvZihmZFgHcmpJk08VHl25QdPfaoLkiV2IxrU99cMVQ0flyYALgAgoigSzyGw/pub?gid=0&single=true&output=csv" placeholder="Google Sheet CSV URL...">
         <br>
-        <button class="action-btn" onclick="fetchAndAnalyzeURL()">Fetch Data Now</button>
-        <div id="loading" class="loading">ഗൂഗിൾ ഷീറ്റിൽ നിന്ന് ഡാറ്റ ലോഡ് ചെയ്യുന്നു... കാത്തിരിക്കൂ...</div>
-    </div>
-
-    <!-- Mode 2: Direct Paste -->
-    <div class="input-card" id="mode-paste" style="display: none;">
-        <p style="color: #94a3b8; margin-top: 0;">Google Sheet-ലെ കോളം A മുതൽ J വരെ (Symbol മുതൽ Pre Close വരെ) കോപ്പി ചെയ്ത് താഴെ പേസ്റ്റ് ചെയ്യുക:</p>
-        <textarea id="pastedData" placeholder="ഡാറ്റ ഇവിടെ പേസ്റ്റ് ചെയ്യുക..."></textarea>
-        <br>
-        <button class="action-btn" onclick="analyzePastedData()">Analyze Data Now</button>
+        <button class="action-btn" onclick="fetchAndAnalyzeURL()">Generate AI Report</button>
+        <div id="loading" class="loading">AI ഡാറ്റ വിശകലനം ചെയ്യുന്നു... ദയവായി കാത്തിരിക്കുക...</div>
     </div>
 
     <div id="result-area" style="display: none;">
         
-        <!-- Sector Analysis Panel -->
-        <div class="sector-panel">
-            <div class="sector-box">
-                <h3>🚀 Leading Sector (മുന്നിൽ)</h3>
-                <div id="top-sector" class="sector-name positive">Loading...</div>
-            </div>
-            <div class="sector-box" style="text-align: right;">
-                <h3>⚠️ Lagging Sector (പിന്നിൽ)</h3>
-                <div id="bottom-sector" class="sector-name negative">Loading...</div>
-            </div>
-        </div>
+        <h2 style="color: #4ade80;">🏆 Day Best 5: AI Top Recommendations</h2>
+        <div class="top-picks-container" id="top-cards"></div>
 
-        <h2 style="margin-top: 30px; color: #4ade80;">Top 10 Day Best Trades (Sector-Wise)</h2>
-        <div class="top-cards" id="top-cards"></div>
-
-        <h2 style="margin-top: 40px;">All Stocks Full Analysis</h2>
+        <h2 style="margin-top: 30px;">📊 Full Market Analysis Report (Technical + Fundamental)</h2>
         <div class="table-responsive">
             <table>
                 <thead>
                     <tr>
                         <th>Symbol</th>
-                        <th>Sector</th>
-                        <th>LTP (₹)</th>
-                        <th>Change %</th>
-                        <th>Fib Support (S1)</th>
-                        <th>Fib Resist. (R1)</th>
+                        <th>LTP (₹) & Change</th>
+                        <th>AI Score</th>
+                        <th>Fundamental Analysis (Valuation & Size)</th>
+                        <th>Technical Trend</th>
                         <th>Entry Price</th>
-                        <th>Target</th>
+                        <th>Target (Exit)</th>
                         <th>Stop Loss</th>
-                        <th>Trend</th>
                     </tr>
                 </thead>
                 <tbody id="table-body"></tbody>
             </table>
         </div>
     </div>
-
+    
+    <div class="disclaimer">
+        DISCLAIMER: ഈ AI സ്കോറിങ് സിസ്റ്റം തികച്ചും മാത്തമാറ്റിക്കൽ കാൽക്കുലേഷൻ അടിസ്ഥാനമാക്കിയുള്ളതാണ്. ട്രേഡിങ്ങിൽ നിങ്ങളുടെ സ്വന്തം റിസ്ക് മാനേജ്മെന്റ് ഉപയോഗിക്കുക.
+    </div>
 </div>
 
 <script>
-    const niftySectors = {
-        "RELIANCE": "Energy", "ONGC": "Energy", "COALINDIA": "Energy", "NTPC": "Energy", "POWERGRID": "Energy", "BPCL": "Energy",
-        "TCS": "IT", "INFY": "IT", "HCLTECH": "IT", "WIPRO": "IT", "TECHM": "IT", "LTIM": "IT", "COFORGE": "IT", "PERSISTENT": "IT", "MPHASIS": "IT", "KPITTECH": "IT",
-        "HDFCBANK": "Financial Services", "ICICIBANK": "Financial Services", "AXISBANK": "Financial Services", "KOTAKBANK": "Financial Services", "SBIN": "Financial Services", "BAJFINANCE": "Financial Services", "BAJAJFINSV": "Financial Services", "HDFCLIFE": "Financial Services", "SBILIFE": "Financial Services", "INDUSINDBK": "Financial Services",
-        "HINDUNILVR": "FMCG", "ITC": "FMCG", "NESTLEIND": "FMCG", "BRITANNIA": "FMCG", "TATACONSUM": "FMCG",
-        "TATAMOTORS": "Automobile", "M&M": "Automobile", "MARUTI": "Automobile", "BAJAJ-AUTO": "Automobile", "EICHERMOT": "Automobile", "HEROMOTOCO": "Automobile",
-        "SUNPHARMA": "Healthcare", "CIPLA": "Healthcare", "DRREDDY": "Healthcare", "APOLLOHOSP": "Healthcare", "DIVISLAB": "Healthcare",
-        "TATASTEEL": "Metals & Mining", "HINDALCO": "Metals & Mining", "JSWSTEEL": "Metals & Mining", "ADANIENT": "Metals & Mining",
-        "ASIANPAINT": "Consumer Durables", "TITAN": "Consumer Durables",
-        "LT": "Construction", "GRASIM": "Construction Materials", "ULTRACEMCO": "Construction Materials",
-        "BHARTIARTL": "Telecommunication", "ADANIPORTS": "Services", "BEL": "Capital Goods"
-    };
-
     window.addEventListener('DOMContentLoaded', () => {
-        fetchAndAnalyzeURL(); 
-        setInterval(fetchAndAnalyzeURL, 60000); 
+        // Auto fetch on load
+        fetchAndAnalyzeURL();
+        // Refresh every 2 minutes
+        setInterval(fetchAndAnalyzeURL, 120000); 
     });
-
-    function switchMode(mode) {
-        document.getElementById('mode-url').style.display = mode === 'url' ? 'block' : 'none';
-        document.getElementById('mode-paste').style.display = mode === 'paste' ? 'block' : 'none';
-        document.getElementById('btn-tab-url').className = 'tab-btn ' + (mode === 'url' ? 'active' : '');
-        document.getElementById('btn-tab-paste').className = 'tab-btn ' + (mode === 'paste' ? 'active' : '');
-    }
 
     function cleanNum(val) {
         if (!val || val === "#N/A" || val.includes("N/A") || val.trim() === "") return 0;
@@ -215,15 +121,14 @@
         return parseFloat(cleaned) || 0;
     }
 
-    function parseTextToRows(text) {
+    function parseCSV(text) {
         const lines = text.trim().split(/\r?\n/);
         const rows = [];
         for (let line of lines) {
             if (!line.trim()) continue;
-            let cols = line.includes('\t') ? line.split('\t') : line.split(',');
-            
-            // കുറഞ്ഞത് സിംബലും വിലയും (2 കോളങ്ങൾ എങ്കിലും) ഉണ്ടെങ്കിൽ മാത്രം എടുക്കുക
-            if (cols.length >= 2) { 
+            let cols = line.split(',');
+            // ഡാറ്റ ശരിയായി വായിക്കാൻ കുറഞ്ഞത് 9 കോളങ്ങൾ ഉണ്ടെന്ന് ഉറപ്പാക്കുന്നു
+            if (cols.length >= 9) { 
                 rows.push(cols);
             }
         }
@@ -231,150 +136,164 @@
     }
 
     function processAndDisplay(rows) {
-        const rawStocks = [];
-        const sectorData = {};
+        const results = [];
 
         for (let cols of rows) {
             const name = cols[0] ? cols[0].replace(/["]/g, '').replace('NSE:', '').replace('BSE:', '').trim() : '';
             if (name.toLowerCase().includes('symbol') || name === '') continue;
 
-            const ltp = cols.length > 1 ? cleanNum(cols[1]) : 0;
-            const dayOpen = cols.length > 6 ? cleanNum(cols[6]) : 0;
-            const dayHigh = cols.length > 7 ? cleanNum(cols[7]) : 0;
-            const dayLow = cols.length > 8 ? cleanNum(cols[8]) : 0;
-            const preClose = cols.length > 9 ? cleanNum(cols[9]) : 0;
+            const ltp = cleanNum(cols[1]); 
+            const high52 = cleanNum(cols[2]); 
+            const low52 = cleanNum(cols[3]); 
+            const marketCap = cleanNum(cols[4]); 
+            const peRatio = cleanNum(cols[5]); 
+            const dayOpen = cleanNum(cols[6]); 
+            const dayHigh = cleanNum(cols[7]); 
+            const dayLow = cleanNum(cols[8]); 
+            const preClose = cleanNum(cols[9]); 
             
-            // വില (LTP) ഇല്ലാത്ത ഓഹരികളെ മാത്രം ഒഴിവാക്കുന്നു
             if (ltp === 0) continue;
 
-            // Day High/Low കിട്ടിയില്ലെങ്കിൽ ഫെയിൽ ആകാതിരിക്കാൻ LTP തന്നെ ഉപയോഗിക്കുന്നു
             const dHigh = dayHigh || ltp;
             const dLow = dayLow || ltp;
             const pClose = preClose || ltp;
-
             const changePct = pClose !== 0 ? ((ltp - pClose) / pClose) * 100 : 0;
-            const sector = niftySectors[name] || "Others";
 
-            if (!sectorData[sector]) {
-                sectorData[sector] = { totalChange: 0, count: 0 };
-            }
-            sectorData[sector].totalChange += changePct;
-            sectorData[sector].count += 1;
-
-            rawStocks.push({ name, sector, ltp, changePct, dayOpen, dayHigh: dHigh, dayLow: dLow });
-        }
-
-        if (rawStocks.length === 0) {
-            alert("ഡാറ്റ വായിക്കാൻ സാധിച്ചില്ല. ഷീറ്റിൽ ഗൂഗിൾ ഫിനാൻസ് നൽകുന്ന 'LTP' ലഭ്യമാണെന്ന് ഉറപ്പുവരുത്തുക.");
-            return;
-        }
-
-        const sectorAverages = {};
-        const sectorRankList = [];
-        for (let sec in sectorData) {
-            const avg = sectorData[sec].totalChange / sectorData[sec].count;
-            sectorAverages[sec] = avg;
-            if (sec !== "Others") {
-                sectorRankList.push({ name: sec, avgChange: avg });
-            }
-        }
-        
-        sectorRankList.sort((a, b) => b.avgChange - a.avgChange);
-        
-        if (sectorRankList.length > 0) {
-            const topSec = sectorRankList[0];
-            const botSec = sectorRankList[sectorRankList.length - 1];
+            // ==========================================
+            // 1. FUNDAMENTAL ANALYSIS (Score max 50)
+            // ==========================================
+            let fundScore = 25; // Base score
+            let valuationText = "Neutral";
+            let valClass = "val-neutral";
             
-            document.getElementById('top-sector').innerHTML = `${topSec.name} (${topSec.avgChange > 0 ? '+' : ''}${topSec.avgChange.toFixed(2)}%)`;
-            document.getElementById('top-sector').className = topSec.avgChange >= 0 ? "sector-name positive" : "sector-name negative";
-            
-            document.getElementById('bottom-sector').innerHTML = `${botSec.name} (${botSec.avgChange > 0 ? '+' : ''}${botSec.avgChange.toFixed(2)}%)`;
-        }
+            // PE Ratio Analysis
+            if (peRatio > 0 && peRatio < 20) {
+                fundScore += 15; valuationText = "Undervalued (Good)"; valClass = "val-good";
+            } else if (peRatio >= 20 && peRatio <= 40) {
+                fundScore += 5; valuationText = "Fairly Valued";
+            } else if (peRatio > 40) {
+                fundScore -= 10; valuationText = "Overvalued (Risky)"; valClass = "val-bad";
+            } else if (peRatio === 0) {
+                valuationText = "PE N/A";
+            }
 
-        const results = [];
-        for (let stock of rawStocks) {
-            const pivot = (stock.dayHigh + stock.dayLow + stock.ltp) / 3;
-            const range = stock.dayHigh - stock.dayLow;
+            // Market Cap Category
+            let mcapCategory = "Unknown";
+            const cr = marketCap / 10000000; // Value in Crores
+            if (cr > 20000) mcapCategory = "Large Cap";
+            else if (cr > 5000) mcapCategory = "Mid Cap";
+            else if (cr > 0) mcapCategory = "Small Cap";
+
+            // 52 Week Analysis
+            let w52Status = "";
+            if (high52 > 0) {
+                const distToHigh = ((high52 - ltp) / high52) * 100;
+                if (distToHigh < 5) {
+                    fundScore += 10; w52Status = "Near 52W High 🔥";
+                }
+            }
+
+            // ==========================================
+            // 2. TECHNICAL ANALYSIS (Score max 50)
+            // ==========================================
+            let techScore = 25; // Base score
+            const pivot = (dHigh + dLow + ltp) / 3;
+            const range = dHigh - dLow;
             
             const r1 = pivot + (range * 0.382);
             const r2 = pivot + (range * 0.618);
             const s1 = pivot - (range * 0.382);
             const s2 = pivot - (range * 0.618);
 
-            let score = 50 + (stock.changePct * 5);
-            const sectorBonus = (sectorAverages[stock.sector] || 0) * 8; 
-            score += sectorBonus;
-
             let trend = "Neutral ➖";
-            if (stock.ltp > pivot && stock.ltp > stock.dayOpen) {
-                trend = "Bullish 🟢";
-                score += 15;
-            } else if (stock.ltp < pivot && stock.ltp < stock.dayOpen) {
-                trend = "Bearish 🔴";
-                score -= 15;
+            if (ltp > pivot && ltp > dayOpen) {
+                trend = "Strong Bullish 🟢"; techScore += 15;
+            } else if (ltp > pivot) {
+                trend = "Bullish ↗️"; techScore += 8;
+            } else if (ltp < pivot && ltp < dayOpen) {
+                trend = "Strong Bearish 🔴"; techScore -= 15;
+            } else if (ltp < pivot) {
+                trend = "Bearish ↘️"; techScore -= 8;
             }
+
+            // Momentum Bonus
+            if (changePct > 2) techScore += 10;
+            else if (changePct > 0) techScore += 5;
+            else if (changePct < -2) techScore -= 10;
+
+            // ==========================================
+            // 3. COMBINED AI SMART SCORE & LEVELS
+            // ==========================================
+            let totalScore = Math.min(100, Math.max(0, fundScore + techScore)); // Clamp between 0-100
 
             let entryPrice, targetPrice, stopLoss;
             if (trend.includes("Bullish")) {
-                entryPrice = stock.ltp; 
-                targetPrice = (stock.ltp < r1) ? r1 : r2; 
+                entryPrice = ltp; 
+                targetPrice = (ltp < r1) ? r1 : r2; 
                 stopLoss = s1; 
             } else if (trend.includes("Bearish")) {
-                entryPrice = stock.ltp;
-                targetPrice = (stock.ltp > s1) ? s1 : s2;
+                entryPrice = ltp;
+                targetPrice = (ltp > s1) ? s1 : s2;
                 stopLoss = r1;
             } else {
-                entryPrice = stock.ltp;
+                entryPrice = ltp;
                 targetPrice = r1;
                 stopLoss = s1;
             }
 
             results.push({
-                name: stock.name, sector: stock.sector, ltp: stock.ltp, changePct: stock.changePct,
-                s1, r1, entry: entryPrice, target: targetPrice,
-                sl: Math.min(stopLoss, entryPrice * 0.995), 
-                trend, score
+                name, ltp, changePct, peRatio, mcapCategory, valuationText, valClass, w52Status,
+                s1, r1, entry: entryPrice, target: targetPrice, sl: Math.min(stopLoss, entryPrice * 0.995), 
+                trend, score: Math.round(totalScore)
             });
         }
 
+        if (results.length === 0) {
+            alert("ഡാറ്റ അനാലിസിസ് പരാജയപ്പെട്ടു. ഷീറ്റിൽ വിവരങ്ങൾ ഉണ്ടെന്ന് ഉറപ്പുവരുത്തുക.");
+            return;
+        }
+
+        // Sort by AI Smart Score
         results.sort((a, b) => b.score - a.score);
 
+        // Render Day Best 5
         const topCards = document.getElementById('top-cards');
         topCards.innerHTML = '';
-        const displayCount = Math.min(10, results.length);
+        const topCount = Math.min(5, results.length);
         
-        for(let i = 0; i < displayCount; i++) {
+        for(let i = 0; i < topCount; i++) {
             const item = results[i];
             topCards.innerHTML += `
-                <div class="card">
-                    <div class="rank-badge">Rank #${i+1}</div>
-                    <h3 style="margin-top:0;">${item.name}</h3>
-                    <p style="font-size:12px; color:#94a3b8; margin-top:-10px;">Sector: <b>${item.sector}</b></p>
-                    <p><b>Current Trend:</b> ${item.trend}</p>
-                    <hr style="border: 0; border-top: 1px solid #334155; margin: 10px 0;">
-                    <p><b>Buy/Entry Price:</b> <span class="sup-text">₹${item.entry.toFixed(2)}</span></p>
-                    <p><b>Target (Exit):</b> <span class="res-text">₹${item.target.toFixed(2)}</span></p>
-                    <p><b>Stop Loss (SL):</b> <span class="sl-text">₹${item.sl.toFixed(2)}</span></p>
+                <div class="pick-card">
+                    <div class="rank">#${i+1}</div>
+                    <h3 style="margin-top:0; color:#fff;">${item.name}</h3>
+                    <div class="ai-score">AI Score: ${item.score}/100</div>
+                    <p style="margin: 5px 0;"><span class="badge bg-fund">${item.valuationText}</span> <span class="badge bg-tech">${item.trend.replace(/[^a-zA-Z ]/g, "").trim()}</span></p>
+                    <hr style="border: 0; border-top: 1px solid #334155; margin: 15px 0;">
+                    <p style="font-size: 14px; margin: 5px 0;"><b>Entry Price:</b> <span style="color:#38bdf8;">₹${item.entry.toFixed(2)}</span></p>
+                    <p style="font-size: 14px; margin: 5px 0;"><b>Target (Exit):</b> <span style="color:#fbbf24;">₹${item.target.toFixed(2)}</span></p>
+                    <p style="font-size: 14px; margin: 5px 0;"><b>Stop Loss:</b> <span style="color:#f87171;">₹${item.sl.toFixed(2)}</span></p>
                 </div>
             `;
         }
 
+        // Render Full Table
         const tbody = document.getElementById('table-body');
         tbody.innerHTML = '';
         results.forEach((item) => {
-            const changeClass = item.changePct >= 0 ? 'positive' : 'negative';
+            const changeClass = item.changePct >= 0 ? 'val-good' : 'val-bad';
+            const w52Badge = item.w52Status ? `<br><span style="font-size:11px; color:#fbbf24;">${item.w52Status}</span>` : "";
+            
             tbody.innerHTML += `
                 <tr>
-                    <td><b>${item.name}</b></td>
-                    <td style="font-size:12px; color:#94a3b8;">${item.sector}</td>
-                    <td>₹${item.ltp.toFixed(2)}</td>
-                    <td class="${changeClass}">${item.changePct.toFixed(2)}%</td>
-                    <td class="sup-text">₹${item.s1.toFixed(2)}</td>
-                    <td class="res-text">₹${item.r1.toFixed(2)}</td>
-                    <td><b>₹${item.entry.toFixed(2)}</b></td>
-                    <td class="res-text">₹${item.target.toFixed(2)}</td>
-                    <td class="sl-text">₹${item.sl.toFixed(2)}</td>
+                    <td><b>${item.name}</b><br><span style="font-size:11px; color:#94a3b8;">${item.mcapCategory}</span></td>
+                    <td>₹${item.ltp.toFixed(2)} <br><span class="${changeClass}">${item.changePct > 0 ? '+' : ''}${item.changePct.toFixed(2)}%</span></td>
+                    <td><b style="font-size: 18px; color: #38bdf8;">${item.score}</b>/100</td>
+                    <td><span class="${item.valClass}">${item.valuationText}</span> <br><span style="font-size:12px; color:#94a3b8;">PE: ${item.peRatio || 'N/A'}</span> ${w52Badge}</td>
                     <td>${item.trend}</td>
+                    <td style="color:#38bdf8; font-weight:bold;">₹${item.entry.toFixed(2)}</td>
+                    <td style="color:#fbbf24; font-weight:bold;">₹${item.target.toFixed(2)}</td>
+                    <td style="color:#f87171; font-weight:bold;">₹${item.sl.toFixed(2)}</td>
                 </tr>
             `;
         });
@@ -383,45 +302,35 @@
     }
 
     async function fetchAndAnalyzeURL() {
-        const rawUrl = document.getElementById('sheetUrl').value.trim();
-        if (!rawUrl) return;
+        const csvUrl = document.getElementById('sheetUrl').value.trim();
+        if (!csvUrl) return;
 
         const loadingDiv = document.getElementById('loading');
         loadingDiv.style.display = 'block';
-        document.getElementById('result-area').style.display = 'none';
         
         try {
-            let response = await fetch(rawUrl).catch(() => null);
+            // നേരിട്ട് പുതിയ CSV ലിങ്ക് വഴി ഡാറ്റ എടുക്കുന്നു
+            let response = await fetch(csvUrl).catch(() => null);
             let csvText = "";
 
             if (response && response.ok) {
                 csvText = await response.text();
             } else {
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(rawUrl)}`;
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(csvUrl)}`;
                 const proxyResponse = await fetch(proxyUrl);
                 if (!proxyResponse.ok) throw new Error("Fetch failed");
                 csvText = await proxyResponse.text();
             }
             
             loadingDiv.style.display = 'none';
-            const rows = parseTextToRows(csvText);
+            const rows = parseCSV(csvText);
             processAndDisplay(rows);
 
         } catch (err) {
             console.error(err);
             loadingDiv.style.display = 'none';
-            alert("ഡാറ്റ തനിയെ ലോഡ് ചെയ്യാൻ സാധിച്ചില്ല. ബ്രൗസറിന്റെയോ ലിങ്കിന്റെയോ പ്രശ്നമാകാം. 'Direct Copy-Paste' ടാബ് ഉപയോഗിക്കുക.");
+            alert("ഡാറ്റ അനാലിസിസ് പരാജയപ്പെട്ടു. ഷീറ്റ് ലിങ്ക് പബ്ലിക് ആണെന്ന് ഉറപ്പുവരുത്തുക.");
         }
-    }
-
-    function analyzePastedData() {
-        const text = document.getElementById('pastedData').value.trim();
-        if (!text) {
-            alert("ദയവായി ഗൂഗിൾ ഷീറ്റിലെ ഡാറ്റ ബോക്സിലേക്ക് പേസ്റ്റ് ചെയ്യുക!");
-            return;
-        }
-        const rows = parseTextToRows(text);
-        processAndDisplay(rows);
     }
 </script>
 
