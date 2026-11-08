@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Map feature extractor</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<style>
+:root{--bg:#eef1f0;--fg:#14211c;--ac:#0b7a75;--on:#fff;--ac2:#d9ecea;--bd:#c3cbc8;--mut:#56655f;color-scheme:light dark}
+@media(prefers-color-scheme:dark){:root{--bg:#141c19;--fg:#e4ebe8;--ac:#4cc4bc;--on:#06231f;--ac2:#1f3a37;--bd:#34423e;--mut:#9aaba5}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{display:flex;flex-direction:column;background:var(--bg);color:var(--fg);font:15px/1.4 system-ui,"Noto Sans Malayalam",sans-serif}
+header{display:flex;gap:6px;padding:8px;border-bottom:1px solid var(--bd)}
+input,select,button{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px 10px}
+header input{flex:1;min-width:0}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+button.p{background:var(--ac);color:var(--on);border-color:var(--ac);font-weight:600;flex:1}
+button:disabled{opacity:.5}
+#map{flex:1;min-height:220px}
+#panel{padding:10px;border-top:1px solid var(--bd);display:grid;gap:8px}
+.row{display:flex;flex-wrap:wrap;gap:6px}
+.row>button,.row>select{flex:1}
+.chip input{position:absolute;opacity:0}
+.chip span{display:block;padding:6px 12px;border:1px solid var(--bd);border-radius:99px}
+.chip input:checked+span{background:var(--ac2);border-color:var(--ac)}
+.chip input:focus-visible+span{outline:2px solid var(--ac)}
+#st{color:var(--mut);font-size:13px;min-height:1.4em}
+.leaflet-tooltip{font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <input id="q" placeholder="Place search (e.g. Nilambur)" aria-label="Search place">
+  <button id="sb">Search</button>
+</header>
+<div id="map"></div>
+<div id="panel">
+  <div class="row">
+    <label class="chip"><input type="checkbox" id="c_roads" checked><span>റോഡുകൾ</span></label>
+    <label class="chip"><input type="checkbox" id="c_rivers" checked><span>പുഴ / തോട്</span></label>
+    <label class="chip"><input type="checkbox" id="c_water"><span>ജലാശയം</span></label>
+    <label class="chip"><input type="checkbox" id="c_places" checked><span>സ്ഥലപ്പേരുകൾ</span></label>
+    <label class="chip"><input type="checkbox" id="c_rail"><span>റെയിൽ</span></label>
+    <label class="chip"><input type="checkbox" id="c_base" checked><span>Base map</span></label>
+  </div>
+  <div class="row">
+    <select id="lang" aria-label="Label language"><option value="ml">Labels: മലയാളം</option><option value="en">Labels: English</option></select>
+    <button class="p" id="go">ഈ ഭാഗം എടുക്കുക</button>
+  </div>
+  <div id="st">Zoom in on the area you need (zoom 13 or closer), then tap the button. Data © OpenStreetMap contributors.</div>
+  <div class="row"><button id="e1">GeoJSON</button><button id="e2">KML</button><button id="e3">DXF (UTM)</button></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>
+const $=id=>document.getElementById(id),say=t=>$('st').textContent=t;
+const LY={roads:{c:'#c2410c',w:3,n:'ROADS',k:30},rivers:{c:'#0369a1',w:3,n:'RIVERS',k:5},water:{c:'#0ea5e9',w:2,n:'WATER',k:4},rail:{c:'#7e22ce',w:2,n:'RAIL',k:6},places:{c:'#15803d',n:'PLACES',k:3}};
+const map=L.map('map').setView([11.28,76.227],14);
+const tiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
+const out=L.layerGroup().addTo(map);
+let feats=[],bb=null;
+
+const lab=p=>($('lang').value==='ml'?p.name_ml||p.name||p.name_en:p.name_en||p.name||p.name_ml)||'';
+
+function toFeatures(els){
+  const F=[],add=(pr,g)=>F.push({type:'Feature',properties:pr,geometry:g});
+  for(const e of els){
+    const t=e.tags||{};
+    const mk=layer=>({layer,name:t.name||'',name_ml:t['name:ml']||'',name_en:t['name:en']||'',type:t.highway||t.waterway||t.railway||t.place||t.water||'',osm_id:e.type+'/'+e.id});
+    if(e.type==='node'){ if(t.place)add(mk('places'),{type:'Point',coordinates:[e.lon,e.lat]}); continue; }
+    const layer=t.highway?'roads':t.waterway?'rivers':t.natural==='water'?'water':t.railway?'rail':null;
+    if(!layer)continue;
+    const line=g=>g.map(p=>[p.lon,p.lat]);
+    if(e.type==='way'&&e.geometry){
+      const c=line(e.geometry),a=c[0],z=c[c.length-1];
+      const closed=layer==='water'&&c.length>3&&a[0]===z[0]&&a[1]===z[1];
+      add(mk(layer),closed?{type:'Polygon',coordinates:[c]}:{type:'LineString',coordinates:c});
+    }else if(e.type==='relation'&&e.members){
+      for(const m of e.members)if(m.geometry&&m.geometry.length>1)add(mk(layer),{type:'LineString',coordinates:line(m.geometry)});
+    }
+  }
+  return F;
+}
+
+function draw(){
+  out.clearLayers();
+  L.geoJSON({type:'FeatureCollection',features:feats},{
+    style:f=>({color:LY[f.properties.layer].c,weight:LY[f.properties.layer].w,fillOpacity:.25}),
+    pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:4,color:LY.places.c,fillOpacity:1}),
+    onEachFeature:(f,l)=>{const t=lab(f.properties);if(t)l.bindTooltip(t,{permanent:f.properties.layer==='places',sticky:true})}
+  }).addTo(out);
+}
+
+async function go(){
+  const b=map.getBounds(),s=b.getSouth(),w=b.getWest(),n=b.getNorth(),e=b.getEast();
+  if(n-s>0.25||e-w>0.25)return say('This area is too large. Zoom in to zoom 13 or closer and try again.');
+  const q=`(${s.toFixed(5)},${w.toFixed(5)},${n.toFixed(5)},${e.toFixed(5)})`,P=[];
+  if($('c_roads').checked)P.push(`way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|track)(_link)?$"]${q};`);
+  if($('c_rivers').checked)P.push(`way["waterway"~"^(river|stream|canal|drain)$"]${q};`);
+  if($('c_water').checked)P.push(`way["natural"="water"]${q};relation["natural"="water"]${q};`);
+  if($('c_rail').checked)P.push(`way["railway"="rail"]${q};`);
+  if($('c_places').checked)P.push(`node["place"]${q};`);
+  if(!P.length)return say('Select at least one layer.');
+  $('go').disabled=true;say('Fetching data…');
+  try{
+    const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(`[out:json][timeout:60];(${P.join('')});out geom tags;`)});
+    if(!r.ok)throw new Error('server '+r.status);
+    feats=toFeatures((await r.json()).elements);bb=b;draw();
+    const c={};feats.forEach(f=>c[f.properties.layer]=(c[f.properties.layer]||0)+1);
+    say(feats.length?'Found '+Object.entries(c).map(([k,v])=>k+' '+v).join(', ')+'. Ready to export.':'Nothing mapped in this area for the selected layers.');
+  }catch(err){say('Could not fetch data ('+err.message+'). Check the internet connection and try again in a minute.')}
+  $('go').disabled=false;
+}
+
+async function find(){
+  const q=$('q').value.trim();if(!q)return;
+  try{
+    const r=await(await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(q))).json();
+    if(r[0]){const b=r[0].boundingbox;map.fitBounds([[b[0],b[2]],[b[1],b[3]]])}else say('Place not found. Try another spelling.');
+  }catch(err){say('Search failed. Check the internet connection.')}
+}
+
+function save(name,mime,txt){
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:mime}));a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+}
+const ready=()=>feats.length?true:(say('Extract an area first, then export.'),false);
+const labeled=()=>feats.map(f=>({...f,properties:{...f.properties,label:lab(f.properties)}}));
+const esc=s=>String(s).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+
+function geojson(){
+  if(ready())save('map-features.geojson','application/geo+json',JSON.stringify({type:'FeatureCollection',features:labeled()}));
+}
+
+function kml(){
+  if(!ready())return;
+  const co=c=>c.map(p=>p[0]+','+p[1]).join(' ');
+  const g=f=>{const {type,coordinates:c}=f.geometry;
+    return type==='Point'?`<Point><coordinates>${c[0]},${c[1]}</coordinates></Point>`
+      :type==='Polygon'?`<Polygon><outerBoundaryIs><LinearRing><coordinates>${co(c[0])}</coordinates></LinearRing></outerBoundaryIs></Polygon>`
+      :`<LineString><coordinates>${co(c)}</coordinates></LineString>`};
+  const body=labeled().map(f=>`<Placemark><name>${esc(f.properties.label)}</name><description>${f.properties.layer}: ${esc(f.properties.type)}</description>${g(f)}</Placemark>`).join('');
+  save('map-features.kml','application/vnd.google-earth.kml+xml',`<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document>${body}</Document></kml>`);
+}
+
+function utm(lon,lat,zone){
+  const a=6378137,f=1/298.257223563,k0=.9996,e2=f*(2-f),ep=e2/(1-e2);
+  const ph=lat*Math.PI/180,la=lon*Math.PI/180,l0=((zone-1)*6-180+3)*Math.PI/180;
+  const N=a/Math.sqrt(1-e2*Math.sin(ph)**2),T=Math.tan(ph)**2,C=ep*Math.cos(ph)**2,A=Math.cos(ph)*(la-l0);
+  const M=a*((1-e2/4-3*e2**2/64-5*e2**3/256)*ph-(3*e2/8+3*e2**2/32+45*e2**3/1024)*Math.sin(2*ph)+(15*e2**2/256+45*e2**3/1024)*Math.sin(4*ph)-(35*e2**3/3072)*Math.sin(6*ph));
+  const x=k0*N*(A+(1-T+C)*A**3/6+(5-18*T+T*T+72*C-58*ep)*A**5/120)+5e5;
+  const y=k0*(M+N*Math.tan(ph)*(A*A/2+(5-T+9*C+4*C*C)*A**4/24+(61-58*T+T*T+600*C-330*ep)*A**6/720));
+  return [x,y];
+}
+
+function dxf(){
+  if(!ready())return;
+  const zone=Math.floor((bb.getCenter().lng+180)/6)+1;
+  const P=c=>utm(c[0],c[1],zone).map(v=>v.toFixed(3));
+  const sw=utm(bb.getWest(),bb.getSouth(),zone),se=utm(bb.getEast(),bb.getSouth(),zone);
+  const h=((se[0]-sw[0])/120).toFixed(2);
+  const u=s=>s.replace(/[^\x00-\x7f]/g,ch=>'\\U+'+ch.charCodeAt(0).toString(16).toUpperCase().padStart(4,'0'));
+  let d='0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1009\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n70\n5\n';
+  for(const k in LY)d+=`0\nLAYER\n2\n${LY[k].n}\n70\n0\n62\n${LY[k].k}\n6\nCONTINUOUS\n`;
+  d+='0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n';
+  const tx=(L,c,t)=>{const q=P(c);d+=`0\nTEXT\n8\n${L}\n10\n${q[0]}\n20\n${q[1]}\n30\n0\n40\n${h}\n1\n${u(t)}\n`};
+  const pl=(L,pts,closed)=>{
+    d+=`0\nPOLYLINE\n8\n${L}\n66\n1\n70\n${closed?1:0}\n`;
+    pts.forEach(p=>{const q=P(p);d+=`0\nVERTEX\n8\n${L}\n10\n${q[0]}\n20\n${q[1]}\n30\n0\n`});
+    d+=`0\nSEQEND\n8\n${L}\n`;
+  };
+  for(const f of labeled()){
+    const L=LY[f.properties.layer].n,g=f.geometry,t=f.properties.label;
+    if(g.type==='Point'){const q=P(g.coordinates);d+=`0\nPOINT\n8\n${L}\n10\n${q[0]}\n20\n${q[1]}\n30\n0\n`;if(t)tx(L,g.coordinates,t)}
+    else if(g.type==='Polygon')pl(L,g.coordinates[0],1);
+    else{pl(L,g.coordinates,0);if(t&&f.properties.layer!=='rail')tx(L,g.coordinates[g.coordinates.length>>1],t)}
+  }
+  d+='0\nENDSEC\n0\nEOF\n';
+  save(`map-features-UTM${zone}N.dxf`,'application/dxf',d);
+}
+
+$('go').onclick=go;$('sb').onclick=find;
+$('q').onkeydown=e=>{if(e.key==='Enter')find()};
+$('lang').onchange=draw;
+$('c_base').onchange=e=>e.target.checked?tiles.addTo(map):tiles.remove();
+$('e1').onclick=geojson;$('e2').onclick=kml;$('e3').onclick=dxf;
+</script>
+</body>
+</html>
